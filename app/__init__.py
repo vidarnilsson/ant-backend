@@ -6,6 +6,7 @@ from flask_smorest import Api
 from .auth.github_oidc import configure_github_oidc
 from .models import db
 from .routes.package import blp as package_blp
+from .storage.minio import configure_minio
 
 app = Flask(__name__)
 
@@ -25,6 +26,7 @@ app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger"
 app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
 
 configure_github_oidc(app)
+configure_minio(app)
 
 db.init_app(app)
 api = Api(app)

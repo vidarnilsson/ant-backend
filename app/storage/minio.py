@@ -95,6 +95,23 @@ def upload_bytes(
     return object_name
 
 
+def delete_object(object_name: str, client: Minio | None = None) -> None:
+    client = client or create_minio_client()
+    bucket_name = ensure_bucket_exists(client)
+    try:
+        client.remove_object(bucket_name, object_name)
+    except S3Error as exc:
+        raise RuntimeError(
+            f"Unable to delete MinIO object '{object_name}': {exc}"
+        ) from exc
+
+
+def delete_objects(object_names: list[str], client: Minio | None = None) -> None:
+    client = client or create_minio_client()
+    for object_name in reversed(object_names):
+        delete_object(object_name, client=client)
+
+
 def store_package_archive(
     package_name: str, version: str, archive_bytes: bytes, client: Minio | None = None
 ) -> str:

@@ -8,9 +8,10 @@ class PackageSchema(Schema):
 
 class PackageUploadResponseSchema(Schema):
     message = fields.Str(required=True)
-    package_root = fields.Str(required=True)
-    files = fields.List(fields.Str(), required=True)
-    package_fields = fields.Dict(keys=fields.Str(), required=True)
+    package_name = fields.Str(required=True)
+    version = fields.Str(required=True)
+    created_package = fields.Bool(required=True)
+    template_count = fields.Int(required=True)
 
 
 class RepositoryCreateSchema(Schema):

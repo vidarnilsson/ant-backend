@@ -1,4 +1,9 @@
-from ..models import Package, PackageVersion
+from datetime import datetime
+from uuid import uuid4
+
+from sqlalchemy.exc import SQLAlchemyError
+
+from ..models import DownloadEvent, Package, PackageVersion, db
 from ..storage.minio import build_presigned_download_url
 
 
@@ -21,5 +26,18 @@ def get_package_archive_download_url(name: str, version: str) -> str:
     ).one_or_none()
     if package_version is None:
         raise PackageDownloadNotFoundError("Package version not found")
+
+    try:
+        db.session.add(
+            DownloadEvent(
+                id=uuid4(),
+                package_version_id=package_version.id,
+                downloaded_at=datetime.utcnow(),
+            )
+        )
+        db.session.commit()
+    except SQLAlchemyError as exc:
+        db.session.rollback()
+        raise PackageDownloadError("Failed to record download event") from exc
 
     return build_presigned_download_url(package_version.package_archive_file)

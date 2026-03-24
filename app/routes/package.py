@@ -7,8 +7,13 @@ from ..auth.github_oidc import (
     require_repository_claims,
     verify_github_oidc_token,
 )
-from ..schemas import PackageUploadResponseSchema
+from ..schemas import PackageDownloadResponseSchema, PackageUploadResponseSchema
 from ..services.package_archive import InvalidPackageArchiveError, parse_package_archive
+from ..services.package_download import (
+    PackageDownloadError,
+    PackageDownloadNotFoundError,
+    get_package_archive_download_url,
+)
 from ..services.package_publish import (
     PackageConflictError,
     PersistenceError,
@@ -21,7 +26,7 @@ blp = Blueprint(
 )
 
 
-@blp.route("/package")
+@blp.route("/packages")
 class PackageCollection(MethodView):
     @blp.response(200, PackageUploadResponseSchema)
     def post(self):
@@ -57,4 +62,24 @@ class PackageCollection(MethodView):
             "version": result.version,
             "created_package": result.created_package,
             "template_count": result.template_count,
+        }
+
+
+@blp.route("/packages/<string:name>/<string:version>/download")
+class PackageDownload(MethodView):
+    @blp.response(200, PackageDownloadResponseSchema)
+    def get(self, name: str, version: str):
+        try:
+            download_url = get_package_archive_download_url(name, version)
+        except PackageDownloadNotFoundError as exc:
+            abort(404, message=str(exc))
+        except PackageDownloadError as exc:
+            abort(500, message=str(exc))
+        except RuntimeError as exc:
+            abort(500, message=str(exc))
+
+        return {
+            "package_name": name,
+            "version": version,
+            "download_url": download_url,
         }

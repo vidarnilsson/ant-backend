@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import BigInteger, DateTime, ForeignKey, String, Uuid
+from sqlalchemy import BigInteger, DateTime, ForeignKey, String, UniqueConstraint, Uuid
 from sqlalchemy.orm import relationship
 
 db = SQLAlchemy()
@@ -10,9 +10,9 @@ class Repository(db.Model):
 
     id = db.Column(Uuid, primary_key=True)
     repository_id = db.Column(BigInteger, nullable=False, unique=True)
-    repository_owner_id = db.Column(BigInteger, nullable=False, unique=True)
+    repository_owner_id = db.Column(BigInteger, nullable=False)
     repository_name = db.Column(String(255), nullable=False, unique=True)
-    repository_owner_name = db.Column(String(255), nullable=False, unique=True)
+    repository_owner_name = db.Column(String(255), nullable=False)
 
     package = relationship("Package", back_populates="repository", uselist=False)
 
@@ -32,6 +32,7 @@ class Package(db.Model):
 
 class PackageVersion(db.Model):
     __tablename__ = "package_version"
+    __table_args__ = (UniqueConstraint("package_id", "version"),)
 
     id = db.Column(Uuid, primary_key=True)
     package_id = db.Column(Uuid, ForeignKey("package.id"), nullable=False)

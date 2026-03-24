@@ -1,5 +1,7 @@
 import io
 import os
+from datetime import timedelta
+from urllib.parse import urlparse
 
 from flask import current_app
 from minio import Minio
@@ -21,6 +23,14 @@ def configure_minio(app) -> None:
     app.config.setdefault(
         "MINIO_SECURE", os.getenv("MINIO_SECURE", "false").lower() == "true"
     )
+    app.config.setdefault(
+        "MINIO_PUBLIC_BASE_URL",
+        os.getenv("MINIO_PUBLIC_BASE_URL"),
+    )
+    app.config.setdefault(
+        "MINIO_PRESIGNED_URL_EXPIRY_SECONDS",
+        int(os.getenv("MINIO_PRESIGNED_URL_EXPIRY_SECONDS", "900")),
+    )
 
 
 def create_minio_client() -> Minio:
@@ -37,6 +47,26 @@ def create_minio_client() -> Minio:
         access_key=access_key,
         secret_key=secret_key,
         secure=secure,
+    )
+
+
+def create_public_minio_client() -> Minio:
+    public_base_url = current_app.config.get("MINIO_PUBLIC_BASE_URL")
+    access_key = current_app.config["MINIO_ACCESS_KEY"]
+    secret_key = current_app.config["MINIO_SECRET_KEY"]
+
+    if not public_base_url or not access_key or not secret_key:
+        raise RuntimeError("MinIO public download URL is not fully configured")
+
+    parsed = urlparse(public_base_url)
+    if not parsed.scheme or not parsed.netloc:
+        raise RuntimeError("MINIO_PUBLIC_BASE_URL must be a valid absolute URL")
+
+    return Minio(
+        parsed.netloc,
+        access_key=access_key,
+        secret_key=secret_key,
+        secure=parsed.scheme == "https",
     )
 
 
@@ -67,6 +97,23 @@ def build_template_object_name(
     package_name: str, version: str, template_filename: str
 ) -> str:
     return f"{package_name}/{version}/templates/{template_filename}"
+
+
+def build_presigned_download_url(object_name: str) -> str:
+    client = create_public_minio_client()
+    bucket_name = current_app.config["MINIO_BUCKET"]
+    expiry_seconds = current_app.config["MINIO_PRESIGNED_URL_EXPIRY_SECONDS"]
+
+    try:
+        return client.presigned_get_object(
+            bucket_name,
+            object_name,
+            expires=timedelta(seconds=expiry_seconds),
+        )
+    except S3Error as exc:
+        raise RuntimeError(
+            f"Unable to generate MinIO presigned URL for '{object_name}': {exc}"
+        ) from exc
 
 
 def upload_bytes(

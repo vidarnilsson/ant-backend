@@ -14,6 +14,12 @@ class PackageUploadResponseSchema(Schema):
     template_count = fields.Int(required=True)
 
 
+class PackageDownloadResponseSchema(Schema):
+    package_name = fields.Str(required=True)
+    version = fields.Str(required=True)
+    download_url = fields.Url(required=True)
+
+
 class RepositoryCreateSchema(Schema):
     id = fields.UUID(required=True)
     repository_id = fields.Integer(required=True, strict=True)

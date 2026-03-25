@@ -35,8 +35,7 @@ api = Api(app)
 
 api.register_blueprint(package_blp)
 
-if os.getenv("ENABLE_DEV_ROUTES", "").lower() in {"1", "true", "yes", "on"}:
-    api.register_blueprint(dev_blp)
+api.register_blueprint(dev_blp)  # Dev enpoints
 
 with app.app_context():
     db.create_all()

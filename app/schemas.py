@@ -20,6 +20,42 @@ class PackageDownloadResponseSchema(Schema):
     download_url = fields.Url(required=True)
 
 
+class DevPackageSummarySchema(Schema):
+    id = fields.UUID(required=True)
+    name = fields.Str(required=True)
+    versions = fields.List(fields.Str(), required=True)
+
+
+class DevPackageListResponseSchema(Schema):
+    packages = fields.List(fields.Nested(DevPackageSummarySchema), required=True)
+
+
+class DevPackageVersionSummarySchema(Schema):
+    id = fields.UUID(required=True)
+    package_name = fields.Str(required=True)
+    published_at = fields.DateTime(required=True)
+    version = fields.Str(required=True)
+    description = fields.Str(required=True)
+
+
+class DevPackageVersionListResponseSchema(Schema):
+    package_versions = fields.List(
+        fields.Nested(DevPackageVersionSummarySchema), required=True
+    )
+
+
+class DevRepositorySummarySchema(Schema):
+    id = fields.UUID(required=True)
+    repository_id = fields.Integer(required=True, strict=True)
+    repository_owner_id = fields.Integer(required=True, strict=True)
+    repository_name = fields.Str(required=True)
+    repository_owner_name = fields.Str(required=True)
+
+
+class DevRepositoryListResponseSchema(Schema):
+    repositories = fields.List(fields.Nested(DevRepositorySummarySchema), required=True)
+
+
 class RepositoryCreateSchema(Schema):
     id = fields.UUID(required=True)
     repository_id = fields.Integer(required=True, strict=True)

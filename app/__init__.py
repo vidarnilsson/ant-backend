@@ -5,6 +5,7 @@ from flask_smorest import Api
 
 from .auth.github_oidc import configure_github_oidc
 from .models import db
+from .routes.dev import blp as dev_blp
 from .routes.package import blp as package_blp
 from .storage.minio import configure_minio
 
@@ -33,6 +34,9 @@ api = Api(app)
 
 
 api.register_blueprint(package_blp)
+
+if os.getenv("ENABLE_DEV_ROUTES", "").lower() in {"1", "true", "yes", "on"}:
+    api.register_blueprint(dev_blp)
 
 with app.app_context():
     db.create_all()

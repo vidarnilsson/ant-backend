@@ -20,6 +20,52 @@ class PackageDownloadResponseSchema(Schema):
     download_url = fields.Url(required=True)
 
 
+class PackageCatalogLatestVersionSchema(Schema):
+    version = fields.Str(required=True)
+    description = fields.Str(required=True)
+    published_at = fields.DateTime(required=True)
+
+
+class PackageCatalogItemSchema(Schema):
+    name = fields.Str(required=True)
+    repository_owner = fields.Str(required=True)
+    latest_version = fields.Nested(PackageCatalogLatestVersionSchema, required=True)
+    version_count = fields.Int(required=True)
+    download_count = fields.Int(required=True)
+
+
+class PackageCatalogResponseSchema(Schema):
+    packages = fields.List(fields.Nested(PackageCatalogItemSchema), required=True)
+
+
+class PackageVersionListItemSchema(Schema):
+    version = fields.Str(required=True)
+    published_at = fields.DateTime(required=True)
+
+
+class PackageTemplateSchema(Schema):
+    file = fields.Str(required=True)
+    url = fields.Str(required=True)
+
+
+class PackageSelectedVersionSchema(Schema):
+    version = fields.Str(required=True)
+    description = fields.Str(required=True)
+    published_at = fields.DateTime(required=True)
+    download_count = fields.Int(required=True)
+    archive_download_url = fields.Str(required=True)
+    values_file_url = fields.Str(required=True)
+    templates = fields.List(fields.Nested(PackageTemplateSchema), required=True)
+
+
+class PackageDetailResponseSchema(Schema):
+    name = fields.Str(required=True)
+    repository_owner = fields.Str(required=True)
+    download_count = fields.Int(required=True)
+    versions = fields.List(fields.Nested(PackageVersionListItemSchema), required=True)
+    selected_version = fields.Nested(PackageSelectedVersionSchema, required=True)
+
+
 class DevPackageSummarySchema(Schema):
     id = fields.UUID(required=True)
     name = fields.Str(required=True)
